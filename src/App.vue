@@ -1,47 +1,70 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+  import { reactive, computed } from 'vue';
+  import Cabecalho from './components/Cabecalho.vue';
+  import Formulario from './components/Formulario.vue';
+  import ListaDeTarefas from './components/ListaDeTarefas.vue';
+
+  const estado = reactive({
+    filtro: 'Todas',
+    tarefaTemp: '',
+    tarefas: []
+  });
+
+  const exibirAviso = computed(() => {
+    return getTarefasPendentes().length === 0 && estado.filtro === 'Pendentes';
+  });
+
+  const getTarefasPendentes = () => {
+    return estado.tarefas.filter(tarefa => !tarefa.finalizada)
+  }
+
+  const getTarefasFinalizadas = () => {
+    return estado.tarefas.filter(tarefa => tarefa.finalizada)
+  }
+
+  const getTarefasFiltradas = () => {
+    const { filtro } = estado;
+
+    switch (filtro) {
+      case 'Pendentes':
+        return getTarefasPendentes();
+      case 'Finalizadas':
+        return getTarefasFinalizadas();
+      default:
+        return estado.tarefas;
+    }
+  }
+
+  const cadastraTarefa = () => {
+    const tarefaNova = {
+      titulo: estado.tarefaTemp,
+      finalizada: false,
+    };
+    estado.tarefas.push(tarefaNova);
+    estado.tarefaTemp = '';
+  };
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <div class="container" style="padding-bottom: 40px;">
+    <Cabecalho :tarefas-pendentes="getTarefasPendentes().length" />
+    <Formulario :trocar-filtro="evento => estado.filtro = evento.target.value" :tarefa-temp="estado.tarefaTemp" :edita-tarefa-temp="evento => estado.tarefaTemp= evento.target.value" :cadastra-tarefa="cadastraTarefa"/>
+    <div v-if="exibirAviso" class="aviso rounded-2">Não há tarefas pendentes.</div>
+    <ListaDeTarefas :tarefas="getTarefasFiltradas()" :marcar-concluida="marcarComoConcluida"/>
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
+<style>
+  #fundo{
+    background-image: linear-gradient(91deg,#65a0d4,#6bc783);
   }
 
-  .logo {
-    margin: 0 2rem 0 0;
+  .aviso {
+    margin-top: 24px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    color: #fff;
+    border: 24px;
   }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
 </style>
